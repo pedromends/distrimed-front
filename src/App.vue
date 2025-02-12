@@ -9,3 +9,9 @@ export default defineComponent({
   name: 'App'
 });
 </script>
+
+<style>
+  p{
+    margin:0
+  }
+</style>
