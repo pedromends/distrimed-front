@@ -1,6 +1,9 @@
 <template>
     <div class="q-pa-md">
         <h5>{{ pageTitle }}</h5>
+        <div>
+            <q-btn v-if="selectedEvent != ''" label="Salvar alterações" color="primary" @click="finishChanges" />
+        </div>
         <FullCalendar :options="calendarOptions" class="q-mt-md" />
         <q-dialog v-model="createDialog">
             <q-card style="width: 700px">
@@ -44,7 +47,6 @@
                 </q-card-actions>
             </q-card>
         </q-dialog>
-        <q-btn flat label="Salvar" color="primary" @click="finishChanges" />
     </div>
 </template>
 
@@ -70,16 +72,17 @@
                 startHour: null,
                 endHour: null,
                 auxDate: null,
+                selectedEvent: '',
                 calendarOptions: {
                     plugins: [dayGridPlugin, interactionPlugin],
                     locales: [ptLocale],
                     initialView: 'dayGridMonth',
-                    editable: true, // Importante para ativar drag & drop
+                    editable: true,
                     selectable: true,
                     weekends: true,
                     dateClick: this.handleDateClick,
                     eventClick: this.handleEventClick,
-                    eventDrop: this.handleEventDrop, // Adiciona a função aqui
+                    eventDrop: this.handleEventDrop,
                     dayMaxEvents: false,
                     dayMaxEventRows: 3,
                     moreLinkClick: 'popover',
@@ -89,7 +92,6 @@
         },
         methods: {
             finishChanges() {
-                console.log(this.calendarOptions.events)
                 saveAllData(this.calendarOptions.events).then((response) => {
                     console.log(response)
                 }).catch(error => {
@@ -99,16 +101,17 @@
             handleDateClick(info) {
                 const today = new Date();
                 this.selectedDate = new Date(info.dateStr);
+                this.selectedDate.setDate(this.selectedDate.getDate() + 1);
 
                 if (this.selectedDate < today.setHours(0, 0, 0, 0)) {
                     alert('Não é possível agendar eventos em datas passadas.');
                 } else {
-                    this.eventTitle = ''; // Limpa o título
-                    this.eventDate = info.dateStr; // Define a data do evento
-                    this.startHour = ''; // Limpa a hora de início
-                    this.endHour = ''; // Limpa a hora de término
-                    this.selectedEvent = null; // Indica que é um novo evento
-                    this.createDialog = true; // Abre o diálogo de criação
+                    this.eventTitle = '';
+                    this.eventDate = info.dateStr;
+                    this.startHour = '';
+                    this.endHour = '';
+                    this.selectedEvent = null;
+                    this.createDialog = true;
                 }
             },
             handleEventClick(info) {
@@ -120,16 +123,14 @@
                     ? new Date(this.selectedEvent.end).toTimeString().slice(0, 5)
                     : this.startHour;
 
-                this.editDialog = true; // Abre o diálogo de edição
+                this.editDialog = true;
             },
             handleEventDrop(info) {
                 const movedEvent = info.event;
                 const newStart = new Date(movedEvent.start);
                 const newEnd = movedEvent.end ? new Date(movedEvent.end) : new Date(newStart.getTime() + 60 * 60 * 1000);
-
-                // Filtra para remover o próprio evento da lista antes de verificar conflitos
                 const hasConflict = this.eventsProp
-                    .filter(event => event.id !== movedEvent.id) // Ignora o próprio evento
+                    .filter(event => event.id !== movedEvent.id)
                     .some(event => {
                         const eventStart = new Date(event.start);
                         const eventEnd = event.end ? new Date(event.end) : new Date(eventStart.getTime() + 60 * 60 * 1000);
@@ -142,7 +143,6 @@
                     return;
                 }
 
-                // Atualiza os dados do evento após a movimentação bem-sucedida
                 movedEvent.setStart(newStart);
                 movedEvent.setEnd(newEnd);
             },
@@ -155,30 +155,35 @@
                     alert('Erro: Data do evento não definida.');
                     return;
                 }
+
                 const [startH, startM] = this.startHour ? this.startHour.split(':').map(Number) : [];
                 const [endH, endM] = this.endHour ? this.endHour.split(':').map(Number) : [];
+
                 if (startH === undefined || endH === undefined) {
                     alert('Erro: Horário inválido.');
                     return;
                 }
+
                 const newEventStart = new Date(this.selectedDate);
                 newEventStart.setHours(startH, startM);
+
                 const newEventEnd = new Date(this.selectedDate);
                 newEventEnd.setHours(endH, endM);
+
                 if (newEventEnd <= newEventStart) {
                     alert('A hora de término deve ser posterior à hora de início.');
                     return;
                 }
+
                 this.calendarOptions.events.push({
                     id: String(Date.now()),
                     title: this.eventTitle,
-                    start: newEventStart.toISOString(),
-                    end: newEventEnd.toISOString(),
+                    start: newEventStart,
+                    end: newEventEnd,
                     room: this.pageTitle,
                 });
                 this.createDialog = false;
             },
-
             saveEvent() {
                 if (this.eventTitle && this.eventDate && this.startHour && this.endHour) {
                     const newStartDate = new Date(this.eventDate + 'T' + this.startHour)
@@ -191,8 +196,8 @@
 
                     const updatedEvent = { ...this.selectedEvent }
                     updatedEvent.title = this.eventTitle
-                    updatedEvent.start = newStartDate.toISOString()
-                    updatedEvent.end = newEndDate.toISOString()
+                    updatedEvent.start = newStartDate
+                    updatedEvent.end = newEndDate
 
                     const eventIndex = this.calendarOptions.events.findIndex(event => event.id === this.selectedEvent.id)
                     if (eventIndex !== -1) {
@@ -204,15 +209,19 @@
                 }
             },
             deleteEvent() {
-                if (this.selectedEvent) {
-                    if (this.selectedEvent.creator !== this.currentUser) {
-                        alert('Você não tem permissão para excluir este evento.')
-                        return
-                    }
-                    this.selectedEvent.remove()
-                    this.editDialog = false
+                if (!this.selectedEvent) return;
+
+                if (this.selectedEvent.creator !== this.currentUser) {
+                    alert('Você não tem permissão para excluir este evento.');
+                    return;
                 }
-            },
+
+                this.calendarOptions.events = this.calendarOptions.events.filter(
+                    event => event.id !== this.selectedEvent.id
+                );
+
+                this.editDialog = false;
+            }
         }
     }
 </script>
