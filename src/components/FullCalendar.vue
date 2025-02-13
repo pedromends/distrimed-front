@@ -1,18 +1,27 @@
 <template>
   <div class="q-pa-md">
-    <q-btn @click="toggleWeekends" color="primary" label="Alternar Finais de Semana" />
-
+    <h5>{{ pageTitle }}</h5>
     <FullCalendar :options="calendarOptions" class="q-mt-md" />
-
-    <q-dialog v-model="fullWidth" full-width>
+    <q-dialog v-model="createDialog">
       <q-card>
         <q-card-section>
-          <div class="text-h6">Selecione uma data</div>
+          <div class="text-h6">Selecione um horário</div>
         </q-card-section>
         <q-separator />
         <div>
-          <DatePicker />
+          <q-input
+            filled
+            v-model="eventTitle"
+            label="Nome do evento"
+            lazy-rules
+            :rules="[(val) => (val && val.length > 0) || 'Por favor digite algo']"
+          />
+          <q-time v-model="hour" mask="HH:mm" color="blue" />
         </div>
+        <q-card-actions align="around">
+          <q-btn color="primary" @click="saveNewEvent()">Marcar</q-btn>
+          <q-btn color="red" v-close-popup>Cancelar</q-btn>
+        </q-card-actions>
       </q-card>
     </q-dialog>
 
@@ -41,71 +50,109 @@
 import FullCalendar from '@fullcalendar/vue3'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import interactionPlugin from '@fullcalendar/interaction' // Para interatividade (arrastar/soltar, clique, etc.)
-import DatePicker from 'components/DatePicker.vue'
+import ptLocale from '@fullcalendar/core/locales/pt'
 
 export default {
-  components: { FullCalendar, DatePicker },
+  name: 'FullCalender',
+  props: {
+    pageTitle: String,
+    eventsProp: Array, // Alterado para Array, pois eventos são geralmente uma lista
+  },
+  components: { FullCalendar },
   data() {
     return {
-      calendarOptions: {
-        plugins: [dayGridPlugin, interactionPlugin],
-        initialView: 'dayGridMonth',
-        editable: true, // Permite mover eventos
-        selectable: true, // Permite clicar para adicionar eventos
-        weekends: true, // Exibir finais de semana
-        events: [
-          { id: '1', title: 'Reunião de Equipe', date: '2024-02-10' },
-          { id: '2', title: 'Apresentação do Projeto', date: '2024-02-15' },
-        ],
-        dateClick: this.handleDateClick, // Adiciona evento ao clicar
-        eventClick: this.handleEventClick, // Editar evento ao clicar
-        eventDrop: this.handleEventDrop, // Atualizar evento ao arrastar
-      },
       editDialog: false,
       eventTitle: '',
       selectedEvent: null,
-      fullWidth: false
+      createDialog: false,
+      locale: 'pt-br',
+      auxDate: null,
+      hour: null,
+      calendarOptions: {
+        plugins: [dayGridPlugin, interactionPlugin],
+        locales: [ptLocale],
+        initialView: 'dayGridMonth',
+        editable: true,
+        selectable: true,
+        weekends: true,
+        dateClick: this.handleDateClick,
+        eventClick: this.handleEventClick,
+        eventDrop: this.handleEventDrop,
+        dayMaxEvents: false,
+        dayMaxEventRows: 3,
+        moreLinkClick: 'popover',
+        events: [...this.eventsProp],
+      },
     }
   },
   methods: {
     toggleWeekends() {
       this.calendarOptions.weekends = !this.calendarOptions.weekends
     },
-
     handleDateClick(info) {
-      console.log(info)
-      this.fullWidth = true
-      //const title = prompt('Digite o nome do evento:')
-      // if (title) {
-      //   this.calendarOptions.events.push({
-      //     id: String(Date.now()), // Gera um ID único
-      //     title,
-      //     date: info.dateStr,
-      //   })
-      // }
-      // this.fullWidth = false
-    },
+      const today = new Date()
+      const clickedDate = new Date(info.dateStr)
 
+      if (clickedDate < today.setHours(0, 0, 0, 0)) {
+        alert('Não é possível agendar eventos em datas passadas.')
+        console.log(info)
+      } else {
+        this.createDialog = true
+        this.auxDate = info
+      }
+    },
     handleEventClick(info) {
       this.selectedEvent = info.event
       this.eventTitle = this.selectedEvent.title
       this.editDialog = true
     },
+    saveNewEvent() {
+      if (this.eventTitle != '') {
+        const [h, m] = this.hour.split(':').map(Number)
+        const newEventStart = new Date(this.auxDate.date.setHours(h, m))
+        const newEventEnd = new Date(newEventStart.getTime() + 60 * 60 * 1000) // 1 hora de duração
+        const hasConflict = this.eventsProp.some((event) => {
+          const eventStart = new Date(event.start)
+          const eventEnd = new Date(event.end || eventStart.getTime() + 60 * 60 * 1000) // Se não houver end, assume 1 hora
 
+          return (
+            event.location === this.pageTitle &&
+            ((newEventStart >= eventStart && newEventStart < eventEnd) ||
+              (newEventEnd > eventStart && newEventEnd <= eventEnd) ||
+              (newEventStart <= eventStart && newEventEnd >= eventEnd))
+          )
+        })
+
+        if (hasConflict) {
+          alert('A sala já está reservada neste horário.')
+          return
+        }
+
+        this.events.push({
+          id: String(Date.now()),
+          title: this.eventTitle,
+          start: newEventStart.toISOString(),
+          end: newEventEnd.toISOString(),
+          location: this.pageTitle,
+        })
+
+        this.createDialog = false
+        this.eventTitle = ''
+        this.hour = ''
+      }
+    },
     saveEvent() {
       if (this.selectedEvent) {
         this.selectedEvent.setProp('title', this.eventTitle)
         this.editDialog = false
       }
     },
-
     deleteEvent() {
       if (this.selectedEvent) {
         this.selectedEvent.remove()
         this.editDialog = false
       }
     },
-
     handleEventDrop(info) {
       console.log(
         `Evento ${info.event.title} movido para ${info.event.start.toISOString().slice(0, 10)}`,

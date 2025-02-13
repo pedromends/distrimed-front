@@ -31,19 +31,19 @@ const linksList = [
   {
     title: 'Sala 1',
     caption: 'quasar.dev',
-    icon: 'school',
+    icon: 'meeting_room',
     link: '/room-one',
   },
   {
     title: 'Sala 2',
     caption: 'github.com/quasarframework',
-    icon: 'code',
+    icon: 'meeting_room',
     link: '/room-two',
   },
   {
     title: 'Sala 3',
     caption: 'chat.quasar.dev',
-    icon: 'chat',
+    icon: 'meeting_room',
     link: '/room-three',
   },
 ]
