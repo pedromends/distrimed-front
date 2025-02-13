@@ -6,15 +6,14 @@ ________________________________________
 Requisitos do Sistema
 1. Funcionalidades principais
 ✅ Login de usuário (não precisa autenticação real, pode ser um mock/simulação).
-
 ✅ Listagem de três salas disponíveis para agendamento. (PRONTO)
 ✅ Interface para agendar uma reunião escolhendo: (PRONTO)
 •	Sala desejada. (PRONTO)
 •	Data e horário de início. (PRONTO)
+•	Data de término. (PRONTO)
 
-•	Data de término.
 ✅ Validações:
-•	Não permitir agendamento caso a sala já esteja reservada no horário desejado. (PRONTO)
+•	Não permitir agendamento caso a sala já esteja reservada no horário desejado. 
 •	Não permitir agendamentos no passado. (PRONTO)
 
 •	Adicionais
@@ -26,15 +25,15 @@ ________________________________________
 2. Requisitos técnicos
 •	Frontend: Vue 3 com Quasar Framework. (PRONTO)
 •	Backend: API REST com Node.js e Express. (PRONTO)
-
-•	Banco de Dados: SQLite ou um JSON temporário para armazenar os agendamentos. 
+•	Banco de Dados: SQLite ou um JSON temporário para armazenar os agendamentos. (PRONTO)
 •	Hospedagem do código: O código deve ser versionado e enviado para um repositório público no GitHub. (PRONTO)
 ________________________________________
 3. Validações Obrigatórias
-1.	Evitar conflitos de horários – Um usuário não pode reservar uma sala caso ela já esteja ocupada no horário desejado. (PRONTO)
+1.	Evitar conflitos de horários – Um usuário não pode reservar uma sala caso ela já esteja ocupada no horário desejado.
 2.	Datas e horários coerentes – O horário de início deve ser anterior ao horário de término.
 3.	Agendamento futuro – Não permitir reservas para horários passados.
 4.	Cancelamento restrito – Somente o usuário que criou a reserva pode cancelá-la.
+5.  Não permitir agendamento caso a sala já esteja reservada no horário desejado
 ________________________________________
 4. Critérios de Avaliação
 📌 Código Limpo e Bem Estruturado – Organização, boas práticas e clareza.

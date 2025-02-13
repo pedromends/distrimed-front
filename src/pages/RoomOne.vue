@@ -1,6 +1,6 @@
 <template lang="">
   <q-page>
-    <FullCalendar :pageTitle="'Sala 1'"  />
+    <FullCalendar v-if="events.length > 0" :pageTitle="'Sala 1'" :eventsProp="events" />
   </q-page>
 </template>
 <script>
@@ -9,22 +9,28 @@ import listMeetings from '../services/MeetingsService.js'
 
 export default {
   name: 'RoomOne',
-  created() {
+  mounted() {
     listMeetings('Sala 1').then((response) => {
-      this.events = response.data
-      console.log(this.events)
-    })
+      this.events = Array.isArray(response.data) ? response.data : [];
+    }).catch(error => {
+      console.error("Erro ao buscar reuniões:", error);
+      this.events = []; // Caso erro, defini um array vazio
+    });
   },
   components: {
     FullCalendar,
   },
   data() {
     return {
-      events: null,
+      events: [],
     }
   },
-  methods: {
-
-  },
+  watch: {
+    events(newEvents) {
+      if (newEvents.length > 0) {
+        console.log('Eventos prontos para serem passados para o FullCalendar');
+      }
+    }
+  }
 }
 </script>
