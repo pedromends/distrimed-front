@@ -81,7 +81,7 @@ export default {
         dayMaxEvents: false,
         dayMaxEventRows: 3,
         moreLinkClick: 'popover',
-        events: [...this.eventsProp],
+        events: null,
       },
     }
   },
