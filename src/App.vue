@@ -14,4 +14,5 @@ export default defineComponent({
   p{
     margin:0
   }
+
 </style>
