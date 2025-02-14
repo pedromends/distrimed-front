@@ -11,9 +11,9 @@
                         :rules="[val => !!val || 'O nome é obrigatório']" />
 
                     <q-input v-model="email" label="E-mail" type="email" outlined dense lazy-rules :rules="[
-              val => !!val || 'O e-mail é obrigatório',
-              val => /.+@.+\..+/.test(val) || 'E-mail inválido'
-            ]" />
+                        val => !!val || 'O e-mail é obrigatório',
+                        val => /.+@.+\..+/.test(val) || 'E-mail inválido'
+                    ]" />
                     <q-input v-model="password" :type="isPwd ? 'password' : 'text'" label="Senha" outlined dense
                         lazy-rules :rules="[val => val.length >= 6 || 'A senha deve ter no mínimo 6 caracteres']">
                         <template v-slot:append>
@@ -37,8 +37,15 @@
 
 <script>
     import { authUser, createUser } from '../services/UserService.js'
+    import { useCounterStore } from '../stores/example-store.js'
 
     export default {
+        beforeMount() {
+            const store = useCounterStore();
+            if (store.isLoggedIn || store.userId) {
+                this.$router.push('/dashboard');
+            }
+        },
         data() {
             return {
                 isLogin: true,
@@ -50,28 +57,49 @@
             };
         },
         methods: {
-            authenticate() {
-                authUser({ email: this.email, password: this.password }).then((response) => {
-                    console.log(response)
-                }).catch(error => {
-                    console.error("Erro ao logar:", error);
-                    alert('Erro ao logar')
-                    window.location.reload()
-                });
-            },
-            createNewUser() {
-                createUser({ name: this.name, email: this.email, password: this.password }).then((response) => {
-                    if(response.status == 200){
-                        alert('Usuário cadastrado com sucesso')
-                        window.location.reload()
+            async authenticate() {
+                try {
+                    const response = await authUser({ email: this.email, password: this.password });
+
+                    if (response && response.status === 200) {
+                        console.log(response);
+
+                        const userId = response.data.user.email; // Assumindo que o backend retorna um 'id'
+                        const store = useCounterStore();
+
+                        store.login(userId);
+                        alert('Login realizado com sucesso!');
+
+                        this.$router.push('/dashboard');
                     }
-                }).catch(error => {
+                } catch (error) {
+                    console.error("Erro ao logar:", error);
+                    alert('Erro ao logar');
+                }
+            },
+            async createNewUser() {
+                try {
+                    const response = await createUser({ name: this.name, email: this.email, password: this.password });
+
+                    if (response.status === 200) {
+                        alert('Usuário cadastrado com sucesso');
+                        window.location.reload();
+                    }
+                } catch (error) {
                     console.error("Erro ao criar usuário:", error);
-                    alert('Erro ao criar usuário')
-                    window.location.reload()
-                });
+                    alert('Erro ao criar usuário');
+                    window.location.reload();
+                }
             }
-        }
+        },
+        setup() {
+            const store = useCounterStore();
+            store.initializeState(); // Restaura o estado quando o componente for montado
+
+            return {
+                store,
+            };
+        },
     };
 </script>
 

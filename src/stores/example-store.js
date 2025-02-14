@@ -2,18 +2,51 @@ import { defineStore, acceptHMRUpdate } from 'pinia'
 
 export const useCounterStore = defineStore('counter', {
   state: () => ({
-    counter: 0
+    counter: 0,
+    isLoggedIn: false, // Flag para indicar login
+    userId: null, // ID do usuário logado
   }),
 
   getters: {
-    doubleCount: (state) => state.counter * 2
+    doubleCount: (state) => state.counter * 2,
   },
 
   actions: {
     increment() {
       this.counter++
-    }
-  }
+    },
+    login(userId) {
+      this.isLoggedIn = true
+      this.userId = userId
+    },
+    logout() {
+      this.isLoggedIn = false
+      this.userId = null
+    },
+    initializeState() {
+      const isLoggedIn = localStorage.getItem('isLoggedIn')
+      const userId = localStorage.getItem('userId')
+
+      if (isLoggedIn && userId) {
+        this.isLoggedIn = true
+        this.userId = userId
+      }
+    },
+    // Chama o método initializeState ao inicializar o store
+    actions: {
+      initializeState() {
+        const isLoggedIn = localStorage.getItem('isLoggedIn')
+        const userId = localStorage.getItem('userId')
+
+        if (isLoggedIn && userId) {
+          this.isLoggedIn = true
+          this.userId = userId
+        }
+      },
+    },
+  },
+
+  persist: true, // Adiciona a persistência
 })
 
 if (import.meta.hot) {
