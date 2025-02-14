@@ -4,16 +4,20 @@
             <q-toolbar>
                 <q-btn flat dense round icon="menu" aria-label="Menu" @click="toggleLeftDrawer" />
                 <q-toolbar-title> Agenda Distrimed </q-toolbar-title>
-                <div>Agenda v1</div>
             </q-toolbar>
         </q-header>
 
         <q-drawer v-model="leftDrawerOpen" bordered>
             <q-list>
-                <div class="q-pa-sm row items-center justify-between">
-                    <h6>Salas disponíveis:</h6>
+                <div class="flex column justify-between" style="height: 100vh;">
+                    <div>
+                        <h6 class="q-pl-md">Salas disponíveis:</h6>
+                        <EssentialLink v-for="link in linksList" :key="link.title" v-bind="link" />
+                    </div>
+                    <div class="flex justify-center">
+                        <q-btn flat dense icon="logout" label="LogOut" aria-label="Sair" @click="logout" />
+                    </div>
                 </div>
-                <EssentialLink v-for="link in linksList" :key="link.title" v-bind="link" />
             </q-list>
         </q-drawer>
 
@@ -71,9 +75,19 @@
                 router.push('/');
             }
         },
+        setup() {
+            const store = useCounterStore();
+
+            const logout = () => {
+                store.logout();
+            };
+
+            return {
+                logout
+            };
+        }
     };
 </script>
-
 
 <style>
     .add-btn {

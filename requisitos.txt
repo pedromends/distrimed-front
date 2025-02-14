@@ -5,8 +5,7 @@ Criar um sistema de agendamento de salas de reunião para uma empresa, permitind
 ________________________________________
 Requisitos do Sistema
 1. Funcionalidades principais
-✅ Login de usuário (não precisa autenticação real, pode ser um mock/simulação).
-
+✅ Login de usuário (não precisa autenticação real, pode ser um mock/simulação). (PRONTO)
 ✅ Listagem de três salas disponíveis para agendamento. (PRONTO)
 ✅ Interface para agendar uma reunião escolhendo: (PRONTO)
 •	Sala desejada. (PRONTO)
@@ -16,7 +15,6 @@ Requisitos do Sistema
 ✅ Validações:
 •	Não permitir agendamento caso a sala já esteja reservada no horário desejado. (PRONTO)
 •	Não permitir agendamentos no passado. (PRONTO)
-
 •	Adicionais
 ✅ Listagem de reuniões agendadas. (PRONTO)
 ✅ Visualização de agendamentos em um calendário interativo. (PRONTO)

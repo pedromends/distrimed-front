@@ -14,4 +14,11 @@ export const fetchMeetings = (room) => api.get('/meetings', {
     body: {obj}
   });
 
+  export const getByEmail = (email) => api.get('/get-by-email', {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    params: {email}
+  });
+
   export default fetchMeetings

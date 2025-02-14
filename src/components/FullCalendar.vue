@@ -1,52 +1,60 @@
 <template>
-    <div class="q-pa-md">
-        <h5>{{ pageTitle }}</h5>
-        <div>
-            <q-btn v-if="selectedEvent != ''" label="Salvar alterações" color="primary" @click="finishChanges" />
-        </div>
-        <FullCalendar :options="calendarOptions" class="q-mt-md" />
-        <q-dialog v-model="createDialog">
-            <q-card style="width: 700px">
-                <q-card-section>
-                    <div class="text-h6">Selecione um horário</div>
-                </q-card-section>
-                <q-separator />
-                <div>
-                    <q-input filled v-model="eventTitle" label="Nome do evento" lazy-rules
-                        :rules="[(val) => (val && val.length > 0) || 'Por favor digite algo']" />
-                    <div class="flex justify-center">
-                        <q-time v-model="startHour" mask="HH:mm" label="Hora de Início" color="blue"
-                            class="q-mr-md q-ml-md" />
-                        <q-time v-model="endHour" mask="HH:mm" label="Hora de Término" color="blue"
-                            class="q-mr-md q-ml-md" />
-                    </div>
+    <div class="relative">
+
+        <div class="q-pa-md">
+            <div class="flex justify-between">
+                <h5>{{ pageTitle }}</h5>
+                <div class="flex">
+                    <q-spinner class="absolute" v-if="loading" style="right: 0%;" color="primary" size="3em"
+                        :thickness="10" />
+                    <q-btn label="Salvar alterações" color="primary" @click="finishChanges" />
                 </div>
-                <q-card-actions align="around">
-                    <q-btn color="primary" @click="saveNewEvent">Marcar</q-btn>
-                    <q-btn color="red" v-close-popup>Cancelar</q-btn>
-                </q-card-actions>
-            </q-card>
-        </q-dialog>
-        <q-dialog v-model="editDialog">
-            <q-card>
-                <q-card-section>
-                    <div class="text-h6">Editar Evento</div>
-                </q-card-section>
+            </div>
+            <FullCalendar :options="calendarOptions" class="q-mt-md" />
+            <q-dialog v-model="createDialog">
+                <q-card style="width: 700px">
+                    <q-card-section>
+                        <div class="text-h6">Selecione um horário</div>
+                    </q-card-section>
+                    <q-separator />
+                    <div>
+                        <q-input filled v-model="eventTitle" label="Nome do evento" lazy-rules
+                            :rules="[(val) => (val && val.length > 0) || 'Por favor digite algo']" />
+                        <div class="flex justify-center">
+                            <q-time v-model="startHour" mask="HH:mm" label="Hora de Início" color="blue"
+                                class="q-mr-md q-ml-md" />
+                            <q-time v-model="endHour" mask="HH:mm" label="Hora de Término" color="blue"
+                                class="q-mr-md q-ml-md" />
+                        </div>
+                    </div>
+                    <q-card-actions align="around">
+                        <q-btn color="primary" @click="saveNewEvent">Marcar</q-btn>
+                        <q-btn color="red" v-close-popup>Cancelar</q-btn>
+                    </q-card-actions>
+                </q-card>
+            </q-dialog>
 
-                <q-card-section>
-                    <q-input v-model="eventTitle" label="Título do Evento" />
-                    <q-input v-model="eventDate" label="Data do Evento" type="date" filled />
-                    <q-time v-model="startHour" mask="HH:mm" label="Hora de Início" color="blue" />
-                    <q-time v-model="endHour" mask="HH:mm" label="Hora de Término" color="blue" />
-                </q-card-section>
+            <q-dialog v-model="editDialog">
+                <q-card>
+                    <q-card-section>
+                        <div class="text-h6">Editar Evento</div>
+                    </q-card-section>
 
-                <q-card-actions align="right">
-                    <q-btn flat label="Cancelar" v-close-popup />
-                    <q-btn flat label="Excluir" color="negative" @click="deleteEvent" />
-                    <q-btn flat label="Salvar" color="primary" @click="saveEvent" />
-                </q-card-actions>
-            </q-card>
-        </q-dialog>
+                    <q-card-section>
+                        <q-input v-model="eventTitle" label="Título do Evento" />
+                        <q-input v-model="eventDate" label="Data do Evento" type="date" filled />
+                        <q-time v-model="startHour" mask="HH:mm" label="Hora de Início" color="blue" />
+                        <q-time v-model="endHour" mask="HH:mm" label="Hora de Término" color="blue" />
+                    </q-card-section>
+
+                    <q-card-actions align="right">
+                        <q-btn flat label="Cancelar" v-close-popup />
+                        <q-btn flat label="Excluir" color="negative" @click="deleteEvent" />
+                        <q-btn flat label="Salvar" color="primary" @click="saveEvent" />
+                    </q-card-actions>
+                </q-card>
+            </q-dialog>
+        </div>
     </div>
 </template>
 
@@ -55,7 +63,9 @@
     import dayGridPlugin from '@fullcalendar/daygrid'
     import interactionPlugin from '@fullcalendar/interaction'
     import ptLocale from '@fullcalendar/core/locales/pt'
-    import { saveAllData } from '../services/MeetingsService.js'
+    import { useCounterStore } from '../stores/example-store.js'
+    import { saveAllData, getByEmail } from '../services/MeetingsService.js'
+    import { nextTick } from 'vue';
 
     export default {
         name: 'FullCalendarComponent',
@@ -73,6 +83,7 @@
                 endHour: null,
                 auxDate: null,
                 selectedEvent: '',
+                loading: false,
                 calendarOptions: {
                     plugins: [dayGridPlugin, interactionPlugin],
                     locales: [ptLocale],
@@ -92,11 +103,17 @@
         },
         methods: {
             finishChanges() {
+                nextTick(() => {
+                    this.loading = true
+                });
                 saveAllData(this.calendarOptions.events).then((response) => {
                     console.log(response)
+                    this.loading = false
+                    alert('salvo com sucesso')
                 }).catch(error => {
                     console.error("Erro ao buscar reuniões:", error);
                 });
+
             },
             handleDateClick(info) {
                 const today = new Date();
@@ -175,15 +192,41 @@
                     return;
                 }
 
-                this.calendarOptions.events.push({
-                    id: String(Date.now()),
-                    title: this.eventTitle,
-                    start: newEventStart,
-                    end: newEventEnd,
-                    room: this.pageTitle,
+                // Verifica se há conflitos de horários
+                const hasConflict = this.calendarOptions.events.some(event => {
+                    const eventStart = new Date(event.start);
+                    const eventEnd = event.end ? new Date(event.end) : new Date(eventStart.getTime() + 60 * 60 * 1000);
+                    return newEventStart < eventEnd && newEventEnd > eventStart;
                 });
-                this.createDialog = false;
+
+                if (hasConflict) {
+                    alert('A sala já está reservada neste horário.');
+                    return;
+                }
+
+                const store = useCounterStore();
+
+                getByEmail(store.userId).then((response) => {
+                    let userId = response.data;
+
+                    let newEvent = {
+                        id: String(Date.now()),
+                        title: this.eventTitle,
+                        user_id: userId[0].id,
+                        email: store.userId,
+                        start: newEventStart,
+                        end: newEventEnd,
+                        room: this.pageTitle,
+                    };
+
+                    console.log(newEvent);
+                    this.calendarOptions.events.push(newEvent);
+                    this.createDialog = false;
+                }).catch(error => {
+                    console.error("Erro ao buscar reuniões:", error);
+                });
             },
+
             saveEvent() {
                 if (this.eventTitle && this.eventDate && this.startHour && this.endHour) {
                     const newStartDate = new Date(this.eventDate + 'T' + this.startHour)
@@ -209,9 +252,11 @@
                 }
             },
             deleteEvent() {
+                console.log(this.selectedEvent)
+                const store = useCounterStore();
                 if (!this.selectedEvent) return;
 
-                if (this.selectedEvent.creator !== this.currentUser) {
+                if (this.selectedEvent._def.extendedProps.email !== store.userId) {
                     alert('Você não tem permissão para excluir este evento.');
                     return;
                 }
@@ -221,6 +266,9 @@
                 );
 
                 this.editDialog = false;
+            },
+            getUserByEmail() {
+
             }
         }
     }

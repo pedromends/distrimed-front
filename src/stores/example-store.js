@@ -22,6 +22,7 @@ export const useCounterStore = defineStore('counter', {
     logout() {
       this.isLoggedIn = false
       this.userId = null
+      window.location.reload()
     },
     initializeState() {
       const isLoggedIn = localStorage.getItem('isLoggedIn')
@@ -32,7 +33,6 @@ export const useCounterStore = defineStore('counter', {
         this.userId = userId
       }
     },
-    // Chama o método initializeState ao inicializar o store
     actions: {
       initializeState() {
         const isLoggedIn = localStorage.getItem('isLoggedIn')
@@ -45,7 +45,6 @@ export const useCounterStore = defineStore('counter', {
       },
     },
   },
-
   persist: true, // Adiciona a persistência
 })
 
